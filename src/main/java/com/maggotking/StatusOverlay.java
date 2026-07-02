@@ -61,20 +61,6 @@ class StatusOverlay extends OverlayPanel
 			.text("Maggot King")
 			.build());
 
-		if (config.styleIndicator())
-		{
-			// the boss swaps style after every screech; while the swap is
-			// pending the last seen style is labelled as such and the player
-			// makes the inference themselves
-			boolean pending = tracker.isStyleSwapPending();
-			AttackStyle style = tracker.getCurrentStyle();
-			panelComponent.getChildren().add(LineComponent.builder()
-				.left(pending ? "Last style" : "Boss style")
-				.right(style.getDisplayName())
-				.rightColor(style.getColor())
-				.build());
-		}
-
 		if (config.hpThresholds())
 		{
 			int hp = tracker.estimatedHp();

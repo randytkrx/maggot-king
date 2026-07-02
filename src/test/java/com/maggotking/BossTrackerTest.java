@@ -26,56 +26,35 @@ package com.maggotking;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 public class BossTrackerTest
 {
 	@Test
-	public void screechMarksStyleAsSwapping()
+	public void corpseReminderExpires()
 	{
 		BossTracker tracker = new BossTracker();
-		tracker.setStyle(AttackStyle.RANGED);
-		assertFalse(tracker.isStyleSwapPending());
+		// reminder needs a corpse reference; null corpse means inactive
+		assertFalse(tracker.isCorpseReminderActive());
 
-		tracker.screechStarted();
-		assertTrue(tracker.isStyleSwapPending());
-		assertTrue(tracker.isScreechActive());
-		// the last seen style stays available while the swap is pending
-		assertEquals(AttackStyle.RANGED, tracker.getCurrentStyle());
-
-		tracker.setStyle(AttackStyle.MAGIC);
-		assertFalse(tracker.isStyleSwapPending());
-		assertEquals(AttackStyle.MAGIC, tracker.getCurrentStyle());
-	}
-
-	@Test
-	public void alertWindowsExpire()
-	{
-		BossTracker tracker = new BossTracker();
-		tracker.screechStarted();
-		tracker.slamSeen();
-
-		for (int i = 0; i < MaggotKingIds.SCREECH_ALERT_TICKS; i++)
+		for (int i = 0; i < MaggotKingIds.CORPSE_REMINDER_TICKS; i++)
 		{
 			tracker.tick();
 		}
-
-		assertFalse(tracker.isScreechActive());
-		assertFalse(tracker.isSlamCueActive());
+		assertEquals(0, tracker.getCorpseReminderTicks());
+		assertFalse(tracker.isCorpseReminderActive());
 	}
 
 	@Test
 	public void resetClearsState()
 	{
 		BossTracker tracker = new BossTracker();
-		tracker.setStyle(AttackStyle.RANGED);
-		tracker.screechStarted();
 		tracker.setBurnDamage(120);
+		tracker.setInArena(true);
 		tracker.reset();
 
-		assertEquals(AttackStyle.UNKNOWN, tracker.getCurrentStyle());
-		assertFalse(tracker.isScreechActive());
 		assertEquals(0, tracker.getBurnDamage());
+		assertFalse(tracker.isInArena());
+		assertEquals(0, tracker.getLarvae().size());
 	}
 }

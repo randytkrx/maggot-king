@@ -45,7 +45,6 @@ import net.runelite.api.Tile;
 import net.runelite.api.TileObject;
 import net.runelite.api.WorldView;
 import net.runelite.api.events.ActorDeath;
-import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
@@ -71,8 +70,8 @@ import net.runelite.client.util.ImageUtil;
 @Slf4j
 @PluginDescriptor(
 	name = "Maggot King",
-	description = "Alerts, highlights and tracking for the Maggot King boss",
-	tags = {"maggot", "king", "boss", "pvm", "overlay", "screech", "larvae"}
+	description = "Highlights, phase information and session tracking for the Maggot King boss",
+	tags = {"maggot", "king", "boss", "pvm", "overlay", "larvae", "tracker"}
 )
 public class MaggotKingPlugin extends Plugin implements RenderCallback
 {
@@ -101,9 +100,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 	@Inject
 	private SceneOverlay sceneOverlay;
-
-	@Inject
-	private AlertOverlay alertOverlay;
 
 	@Inject
 	private StatusOverlay statusOverlay;
@@ -144,7 +140,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		clientToolbar.addNavigation(navButton);
 
 		overlayManager.add(sceneOverlay);
-		overlayManager.add(alertOverlay);
 		overlayManager.add(statusOverlay);
 		renderCallbackManager.register(this);
 		clientThread.invokeLater(this::invalidateHideableZones);
@@ -156,7 +151,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		renderCallbackManager.unregister(this);
 		clientThread.invokeLater(this::invalidateHideableZones);
 		overlayManager.remove(sceneOverlay);
-		overlayManager.remove(alertOverlay);
 		overlayManager.remove(statusOverlay);
 		clientToolbar.removeNavigation(navButton);
 		panel = null;
@@ -320,43 +314,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		{
 			stats.addDeath();
 			refreshPanel();
-		}
-	}
-
-	@Subscribe
-	public void onAnimationChanged(AnimationChanged event)
-	{
-		final Actor actor = event.getActor();
-		final int animation = actor.getAnimation();
-
-		if (actor == tracker.getBoss())
-		{
-			switch (animation)
-			{
-				case MaggotKingIds.ANIM_SCREECH:
-					tracker.screechStarted();
-					break;
-				case MaggotKingIds.ANIM_RANGED:
-					tracker.setStyle(AttackStyle.RANGED);
-					break;
-				case MaggotKingIds.ANIM_MAGIC:
-					tracker.setStyle(AttackStyle.MAGIC);
-					break;
-				case MaggotKingIds.ANIM_SLAM:
-					tracker.slamSeen();
-					break;
-			}
-		}
-		else if (actor instanceof NPC && tracker.getLarvae().contains(actor))
-		{
-			if (animation == MaggotKingIds.ANIM_LARVA_FLY)
-			{
-				tracker.getAirborneLarvae().add((NPC) actor);
-			}
-			else
-			{
-				tracker.getAirborneLarvae().remove(actor);
-			}
 		}
 	}
 

@@ -50,23 +50,6 @@ class BossTracker
 	private final Set<NPC> larvae = new HashSet<>();
 
 	@Getter
-	private final Set<NPC> airborneLarvae = new HashSet<>();
-
-	/** Last attack style seen from the boss. */
-	@Getter
-	private AttackStyle currentStyle = AttackStyle.UNKNOWN;
-
-	/** True after a screech until the next attack shows the new style. */
-	@Getter
-	private boolean styleSwapPending;
-
-	@Getter
-	private int screechTicks;
-
-	@Getter
-	private int slamCueTicks;
-
-	@Getter
 	private int corpseReminderTicks;
 
 	@Getter
@@ -77,39 +60,10 @@ class BossTracker
 	@Setter
 	private boolean inArena;
 
-	void setStyle(AttackStyle style)
-	{
-		currentStyle = style;
-		styleSwapPending = false;
-	}
-
-	void screechStarted()
-	{
-		screechTicks = MaggotKingIds.SCREECH_ALERT_TICKS;
-		// The boss swaps attack style after every screech; until the next
-		// attack the indicator shows the last style as "last" information.
-		styleSwapPending = true;
-	}
-
-	void slamSeen()
-	{
-		slamCueTicks = MaggotKingIds.SLAM_CUE_TICKS;
-	}
-
 	void corpseSpawned(NPC npc)
 	{
 		corpse = npc;
 		corpseReminderTicks = MaggotKingIds.CORPSE_REMINDER_TICKS;
-	}
-
-	boolean isScreechActive()
-	{
-		return screechTicks > 0;
-	}
-
-	boolean isSlamCueActive()
-	{
-		return slamCueTicks > 0;
 	}
 
 	boolean isCorpseReminderActive()
@@ -131,18 +85,10 @@ class BossTracker
 	}
 
 	/**
-	 * Advance one game tick: count down the alert windows.
+	 * Advance one game tick: count down the reminder window.
 	 */
 	void tick()
 	{
-		if (screechTicks > 0)
-		{
-			screechTicks--;
-		}
-		if (slamCueTicks > 0)
-		{
-			slamCueTicks--;
-		}
 		if (corpseReminderTicks > 0)
 		{
 			corpseReminderTicks--;
@@ -160,7 +106,6 @@ class BossTracker
 			corpse = null;
 		}
 		larvae.remove(npc);
-		airborneLarvae.remove(npc);
 
 		// the fight is over once neither the boss nor its corpse remains
 		if (boss == null && corpse == null)
@@ -174,12 +119,8 @@ class BossTracker
 		boss = null;
 		corpse = null;
 		larvae.clear();
-		airborneLarvae.clear();
-		currentStyle = AttackStyle.UNKNOWN;
-		styleSwapPending = false;
-		screechTicks = 0;
-		slamCueTicks = 0;
 		corpseReminderTicks = 0;
 		burnDamage = 0;
+		inArena = false;
 	}
 }

@@ -78,22 +78,10 @@ class SceneOverlay extends Overlay
 	{
 		for (NPC larva : tracker.getLarvae())
 		{
-			boolean airborne = tracker.getAirborneLarvae().contains(larva);
-			Color color = airborne ? config.airborneColor() : config.larvaeColor();
-
 			Shape poly = larva.getCanvasTilePoly();
 			if (poly != null)
 			{
-				OverlayUtil.renderPolygon(graphics, poly, color);
-			}
-
-			if (airborne)
-			{
-				Point textPoint = larva.getCanvasTextLocation(graphics, "Airborne", larva.getLogicalHeight() + 40);
-				if (textPoint != null)
-				{
-					OverlayUtil.renderTextLocation(graphics, textPoint, "Airborne", color);
-				}
+				OverlayUtil.renderPolygon(graphics, poly, config.larvaeColor());
 			}
 		}
 	}
@@ -121,10 +109,7 @@ class SceneOverlay extends Overlay
 		Polygon poly = Perspective.getCanvasTileAreaPoly(client, center, size);
 		if (poly != null)
 		{
-			// mirror the screech's white aura on the outline so the telegraph
-			// is hard to miss in the visual chaos
-			Color color = tracker.isScreechActive() ? Color.WHITE : phaseColor();
-			OverlayUtil.renderPolygon(graphics, poly, color);
+			OverlayUtil.renderPolygon(graphics, poly, phaseColor());
 		}
 	}
 

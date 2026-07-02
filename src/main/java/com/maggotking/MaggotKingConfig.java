@@ -37,8 +37,8 @@ public interface MaggotKingConfig extends Config
 	String GROUP = "maggotking";
 
 	@ConfigSection(
-		name = "Alerts",
-		description = "Full screen warnings for dangerous mechanics",
+		name = "Reminders",
+		description = "Post kill reminders",
 		position = 0
 	)
 	String alerts = "alerts";
@@ -52,7 +52,7 @@ public interface MaggotKingConfig extends Config
 
 	@ConfigSection(
 		name = "Boss info",
-		description = "Attack style and phase information",
+		description = "Health and phase information",
 		position = 2
 	)
 	String bossInfo = "bossInfo";
@@ -64,62 +64,14 @@ public interface MaggotKingConfig extends Config
 	)
 	String tracking = "tracking";
 
-	// Alerts
-
-	@ConfigItem(
-		keyName = "screechAlert",
-		name = "Screech alert",
-		description = "Flash a callout when the boss uses its screech",
-		section = alerts,
-		position = 0
-	)
-	default boolean screechAlert()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "screechText",
-		name = "Screech alert text",
-		description = "The text shown by the screech alert",
-		section = alerts,
-		position = 1
-	)
-	default String screechText()
-	{
-		return "Screech!";
-	}
-
-	@ConfigItem(
-		keyName = "airborneAlert",
-		name = "Airborne larva alert",
-		description = "Show a callout while a larva is airborne",
-		section = alerts,
-		position = 2
-	)
-	default boolean airborneAlert()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "slamCue",
-		name = "Slam alert",
-		description = "Flash a callout when the boss uses its slam",
-		section = alerts,
-		position = 3
-	)
-	default boolean slamCue()
-	{
-		return true;
-	}
+	// Reminders
 
 	@ConfigItem(
 		keyName = "corpseReminder",
 		name = "Corpse highlight",
 		description = "Highlight the corpse after the kill with your preferred interaction",
 		section = alerts,
-		position = 4
+		position = 0
 	)
 	default boolean corpseReminder()
 	{
@@ -131,7 +83,7 @@ public interface MaggotKingConfig extends Config
 		name = "Corpse preference",
 		description = "Which corpse interaction to label on the highlight",
 		section = alerts,
-		position = 5
+		position = 1
 	)
 	default CorpsePreference corpsePreference()
 	{
@@ -156,26 +108,13 @@ public interface MaggotKingConfig extends Config
 	@ConfigItem(
 		keyName = "larvaeColor",
 		name = "Larvae color",
-		description = "Color for grounded larvae",
+		description = "Color for larvae",
 		section = highlights,
 		position = 1
 	)
 	default Color larvaeColor()
 	{
 		return new Color(255, 200, 0, 150);
-	}
-
-	@Alpha
-	@ConfigItem(
-		keyName = "airborneColor",
-		name = "Airborne color",
-		description = "Color for airborne larvae",
-		section = highlights,
-		position = 2
-	)
-	default Color airborneColor()
-	{
-		return new Color(0, 255, 255, 200);
 	}
 
 	@ConfigItem(
@@ -224,18 +163,6 @@ public interface MaggotKingConfig extends Config
 		position = 0
 	)
 	default boolean showStatusOverlay()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-		keyName = "styleIndicator",
-		name = "Attack style indicator",
-		description = "Show the attack style the boss is currently using",
-		section = bossInfo,
-		position = 1
-	)
-	default boolean styleIndicator()
 	{
 		return true;
 	}
