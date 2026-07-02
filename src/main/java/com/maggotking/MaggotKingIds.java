@@ -74,10 +74,8 @@ final class MaggotKingIds
 		33675  // WRITHING_MAGGOT_EGG
 	);
 
-	// Boss health and phase thresholds, confirmed in game
+	// Boss health, confirmed in game
 	static final int MAX_HP = 1500;
-	static final int LARVAE_PHASE_HP = 1250;
-	static final int SLAM_PHASE_HP = 1000;
 
 	/** How many ticks the loot reminder stays up after the corpse appears. */
 	static final int CORPSE_REMINDER_TICKS = 50;

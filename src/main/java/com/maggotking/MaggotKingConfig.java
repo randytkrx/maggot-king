@@ -52,7 +52,7 @@ public interface MaggotKingConfig extends Config
 
 	@ConfigSection(
 		name = "Boss info",
-		description = "Health and phase information",
+		description = "Health information",
 		position = 2
 	)
 	String bossInfo = "bossInfo";
@@ -120,7 +120,7 @@ public interface MaggotKingConfig extends Config
 	@ConfigItem(
 		keyName = "bossTrueTile",
 		name = "Boss true tile",
-		description = "Outline the tiles the boss actually occupies, colored by phase",
+		description = "Outline the tiles the boss actually occupies",
 		section = highlights,
 		position = 3
 	)
@@ -129,12 +129,25 @@ public interface MaggotKingConfig extends Config
 		return true;
 	}
 
+	@Alpha
+	@ConfigItem(
+		keyName = "trueTileColor",
+		name = "True tile color",
+		description = "Color of the boss true tile outline",
+		section = highlights,
+		position = 4
+	)
+	default Color trueTileColor()
+	{
+		return new Color(255, 255, 255, 160);
+	}
+
 	@ConfigItem(
 		keyName = "hideScreechRocks",
 		name = "Hide screech rocks",
 		description = "Remove the rocks that rain down and litter the arena after each screech",
 		section = highlights,
-		position = 4
+		position = 5
 	)
 	default boolean hideScreechRocks()
 	{
@@ -146,7 +159,7 @@ public interface MaggotKingConfig extends Config
 		name = "Hide trees",
 		description = "Hide the darkwood trees around the arena",
 		section = highlights,
-		position = 5
+		position = 6
 	)
 	default boolean hideTrees()
 	{
@@ -158,7 +171,7 @@ public interface MaggotKingConfig extends Config
 	@ConfigItem(
 		keyName = "showStatusOverlay",
 		name = "Show status overlay",
-		description = "Show the attack style, boss health and session panel on screen",
+		description = "Show the boss health and session panel on screen",
 		section = bossInfo,
 		position = 0
 	)
@@ -168,13 +181,13 @@ public interface MaggotKingConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "hpThresholds",
-		name = "Phase thresholds",
-		description = "Show boss health with the larvae and slam phase thresholds",
+		keyName = "showBossHealth",
+		name = "Boss health",
+		description = "Show the boss's health in the overlay",
 		section = bossInfo,
 		position = 2
 	)
-	default boolean hpThresholds()
+	default boolean showBossHealth()
 	{
 		return true;
 	}

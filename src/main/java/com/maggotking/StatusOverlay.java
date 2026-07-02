@@ -61,7 +61,7 @@ class StatusOverlay extends OverlayPanel
 			.text("Maggot King")
 			.build());
 
-		if (config.hpThresholds())
+		if (config.showBossHealth())
 		{
 			int hp = tracker.estimatedHp();
 			if (hp >= 0)
@@ -69,11 +69,6 @@ class StatusOverlay extends OverlayPanel
 				panelComponent.getChildren().add(LineComponent.builder()
 					.left("Boss HP")
 					.right(hp + " / " + MaggotKingIds.MAX_HP)
-					.rightColor(hpColor(hp))
-					.build());
-				panelComponent.getChildren().add(LineComponent.builder()
-					.left("Next phase")
-					.right(nextPhase(hp))
 					.build());
 			}
 		}
@@ -117,31 +112,5 @@ class StatusOverlay extends OverlayPanel
 		}
 
 		return super.render(graphics);
-	}
-
-	private static Color hpColor(int hp)
-	{
-		if (hp <= MaggotKingIds.SLAM_PHASE_HP)
-		{
-			return new Color(255, 80, 80);
-		}
-		if (hp <= MaggotKingIds.LARVAE_PHASE_HP)
-		{
-			return new Color(255, 200, 0);
-		}
-		return new Color(120, 255, 120);
-	}
-
-	private static String nextPhase(int hp)
-	{
-		if (hp > MaggotKingIds.LARVAE_PHASE_HP)
-		{
-			return "Larvae @ " + MaggotKingIds.LARVAE_PHASE_HP;
-		}
-		if (hp > MaggotKingIds.SLAM_PHASE_HP)
-		{
-			return "Slam @ " + MaggotKingIds.SLAM_PHASE_HP;
-		}
-		return "Final";
 	}
 }

@@ -109,26 +109,8 @@ class SceneOverlay extends Overlay
 		Polygon poly = Perspective.getCanvasTileAreaPoly(client, center, size);
 		if (poly != null)
 		{
-			OverlayUtil.renderPolygon(graphics, poly, phaseColor());
+			OverlayUtil.renderPolygon(graphics, poly, config.trueTileColor());
 		}
-	}
-
-	private Color phaseColor()
-	{
-		int hp = tracker.estimatedHp();
-		if (hp < 0)
-		{
-			return Color.WHITE;
-		}
-		if (hp <= MaggotKingIds.SLAM_PHASE_HP)
-		{
-			return new Color(255, 80, 80);
-		}
-		if (hp <= MaggotKingIds.LARVAE_PHASE_HP)
-		{
-			return new Color(255, 200, 0);
-		}
-		return new Color(120, 255, 120);
 	}
 
 	private void renderCorpse(Graphics2D graphics)
