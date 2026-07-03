@@ -70,7 +70,7 @@ import net.runelite.client.util.ImageUtil;
 @Slf4j
 @PluginDescriptor(
 	name = "Maggot King",
-	description = "Highlights, phase information and session tracking for the Maggot King boss",
+	description = "Highlights and session tracking for the Maggot King boss",
 	tags = {"maggot", "king", "boss", "pvm", "overlay", "larvae", "tracker"}
 )
 public class MaggotKingPlugin extends Plugin implements RenderCallback
