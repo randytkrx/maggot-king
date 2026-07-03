@@ -25,7 +25,10 @@
 package com.maggotking;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import net.runelite.api.coords.WorldPoint;
 
 /**
  * All Maggot King game ids in one place. Values are numeric literals because the
@@ -42,6 +45,33 @@ final class MaggotKingIds
 	static final int BOSS = 15742; // MAGGOT_KING
 	static final int CORPSE = 15741; // MAGGOT_KING_CORPSE
 	static final int LARVA = 15743; // UR_MAGGOT_LARVAE
+
+	/** Arena region for the boundary tiles. */
+	static final int ARENA_REGION = 11645;
+
+	/**
+	 * The arena edge tiles (region relative), resolved to instance world points
+	 * at render time. Used to draw the border when trees are hidden.
+	 */
+	static final List<WorldPoint> ARENA_BORDER = buildArenaBorder();
+
+	private static List<WorldPoint> buildArenaBorder()
+	{
+		final int[][] tiles =
+		{
+			{23, 32}, {24, 32}, {25, 32}, {26, 32}, {27, 32}, {28, 32}, {29, 32},
+			{30, 32}, {31, 32}, {32, 32}, {33, 32}, {34, 32}, {35, 32}, {36, 32},
+			{37, 32}, {38, 32}, {39, 32},
+			{23, 33}, {23, 34}, {23, 35},
+			{39, 33}, {39, 34}, {39, 35}, {39, 36}
+		};
+		final List<WorldPoint> border = new ArrayList<>(tiles.length);
+		for (int[] t : tiles)
+		{
+			border.add(WorldPoint.fromRegion(ARENA_REGION, t[0], t[1], 0));
+		}
+		return border;
+	}
 
 	/*
 	 * NOTE: the "Odd tree" NPC (16239) is the way OUT of the arena and must

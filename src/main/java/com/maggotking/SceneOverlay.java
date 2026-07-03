@@ -35,6 +35,7 @@ import net.runelite.api.NPC;
 import net.runelite.api.Perspective;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -59,6 +60,10 @@ class SceneOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
+		if (config.showArenaBorder())
+		{
+			renderArenaBorder(graphics);
+		}
 		if (config.highlightLarvae())
 		{
 			renderLarvae(graphics);
@@ -72,6 +77,27 @@ class SceneOverlay extends Overlay
 			renderCorpse(graphics);
 		}
 		return null;
+	}
+
+	private void renderArenaBorder(Graphics2D graphics)
+	{
+		final Color color = config.arenaBorderColor();
+		for (WorldPoint tile : MaggotKingIds.ARENA_BORDER)
+		{
+			// resolve the template tile into the current instance, if any
+			for (WorldPoint wp : WorldPoint.toLocalInstance(client.getTopLevelWorldView(), tile))
+			{
+				final LocalPoint lp = LocalPoint.fromWorld(client.getTopLevelWorldView(), wp);
+				if (lp != null)
+				{
+					final Polygon poly = Perspective.getCanvasTilePoly(client, lp);
+					if (poly != null)
+					{
+						OverlayUtil.renderPolygon(graphics, poly, color);
+					}
+				}
+			}
+		}
 	}
 
 	private void renderLarvae(Graphics2D graphics)

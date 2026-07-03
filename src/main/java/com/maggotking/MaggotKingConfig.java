@@ -166,6 +166,31 @@ public interface MaggotKingConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "showArenaBorder",
+		name = "Show arena border",
+		description = "Outline the edge of the arena, useful when the trees are hidden",
+		section = highlights,
+		position = 7
+	)
+	default boolean showArenaBorder()
+	{
+		return false;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "arenaBorderColor",
+		name = "Arena border color",
+		description = "Color of the arena border outline",
+		section = highlights,
+		position = 8
+	)
+	default Color arenaBorderColor()
+	{
+		return new Color(255, 230, 0, 160);
+	}
+
 	// Boss info
 
 	@ConfigItem(

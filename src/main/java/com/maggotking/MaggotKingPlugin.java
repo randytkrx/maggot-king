@@ -135,6 +135,9 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	private Map<Integer, Integer> lootSnapshot;
 	private int lootWindowTicks;
 
+	/** True while the arena region is loaded; gates scenery hiding to the arena. */
+	private volatile boolean arenaLoaded;
+
 	@Provides
 	MaggotKingConfig provideConfig(ConfigManager configManager)
 	{
@@ -212,6 +215,11 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 	private boolean isHiddenObject(int id)
 	{
+		// only hide inside the arena, so the shared tree ids are untouched elsewhere
+		if (!arenaLoaded)
+		{
+			return false;
+		}
 		return (config.hideScreechRocks() && MaggotKingIds.SCREECH_ROCK_OBJECTS.contains(id))
 			|| (config.hideTrees() && MaggotKingIds.isTree(id));
 	}
@@ -351,6 +359,32 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		{
 			tracker.reset();
 		}
+		if (event.getGameState() == GameState.LOGGED_IN)
+		{
+			// cache whether the arena region is loaded so tree hiding only
+			// applies here and not to the same trees elsewhere in the game
+			arenaLoaded = isArenaLoaded();
+			// the scene is freshly baked with the old gate value, so re-evaluate
+			// the hideable zones now that arenaLoaded is current
+			clientThread.invokeLater(this::invalidateHideableZones);
+		}
+	}
+
+	private boolean isArenaLoaded()
+	{
+		final WorldView wv = client.getTopLevelWorldView();
+		if (wv == null)
+		{
+			return false;
+		}
+		for (int region : wv.getMapRegions())
+		{
+			if (region == MaggotKingIds.ARENA_REGION)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Subscribe
