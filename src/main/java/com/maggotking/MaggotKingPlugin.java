@@ -28,7 +28,9 @@ import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
@@ -39,6 +41,8 @@ import net.runelite.api.GameState;
 import net.runelite.api.Constants;
 import net.runelite.api.GameObject;
 import net.runelite.api.HitsplatID;
+import net.runelite.api.Item;
+import net.runelite.api.ItemContainer;
 import net.runelite.api.NPC;
 import net.runelite.api.Scene;
 import net.runelite.api.Tile;
@@ -48,8 +52,12 @@ import net.runelite.api.events.ActorDeath;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
+import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.ItemSpawned;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
+import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.callback.RenderCallback;
@@ -118,6 +126,14 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 	private MaggotKingPanel panel;
 	private NavigationButton navButton;
+
+	/**
+	 * The corpse is looted by interacting with it rather than through a kill
+	 * drop, so no loot event fires for it. Loot is captured by snapshotting
+	 * the inventory when the corpse is clicked and diffing what arrives.
+	 */
+	private Map<Integer, Integer> lootSnapshot;
+	private int lootWindowTicks;
 
 	@Provides
 	MaggotKingConfig provideConfig(ConfigManager configManager)
@@ -341,6 +357,10 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	public void onGameTick(GameTick event)
 	{
 		tracker.tick();
+		if (lootWindowTicks > 0 && --lootWindowTicks == 0)
+		{
+			lootSnapshot = null;
+		}
 		refreshPanel();
 	}
 
@@ -355,10 +375,84 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 		for (ItemStack item : event.getItems())
 		{
-			long value = (long) itemManager.getItemPrice(item.getId()) * item.getQuantity();
-			stats.addLoot(item.getId(), item.getQuantity(), value);
+			addLoot(item.getId(), item.getQuantity());
 		}
 		refreshPanel();
+	}
+
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		// arm the loot capture window when the corpse is interacted with
+		if (tracker.getCorpse() != null && event.getMenuEntry().getNpc() == tracker.getCorpse())
+		{
+			lootSnapshot = snapshotInventory();
+			lootWindowTicks = 10;
+		}
+	}
+
+	@Subscribe
+	public void onItemContainerChanged(ItemContainerChanged event)
+	{
+		if (lootWindowTicks <= 0 || lootSnapshot == null || event.getContainerId() != InventoryID.INV)
+		{
+			return;
+		}
+
+		boolean gainedAny = false;
+		final Map<Integer, Integer> now = snapshotInventory();
+		for (Map.Entry<Integer, Integer> entry : now.entrySet())
+		{
+			final int gained = entry.getValue() - lootSnapshot.getOrDefault(entry.getKey(), 0);
+			if (gained > 0)
+			{
+				addLoot(entry.getKey(), gained);
+				gainedAny = true;
+			}
+		}
+
+		if (gainedAny)
+		{
+			lootWindowTicks = 0;
+			lootSnapshot = null;
+			refreshPanel();
+		}
+	}
+
+	@Subscribe
+	public void onItemSpawned(ItemSpawned event)
+	{
+		// loot that spills onto the floor beside the corpse
+		if (lootWindowTicks > 0
+			&& tracker.getCorpse() != null
+			&& event.getTile().getWorldLocation().distanceTo(tracker.getCorpse().getWorldLocation()) <= 3)
+		{
+			addLoot(event.getItem().getId(), event.getItem().getQuantity());
+			refreshPanel();
+		}
+	}
+
+	private void addLoot(int itemId, int quantity)
+	{
+		final long value = (long) itemManager.getItemPrice(itemId) * quantity;
+		stats.addLoot(itemId, quantity, value);
+	}
+
+	private Map<Integer, Integer> snapshotInventory()
+	{
+		final Map<Integer, Integer> counts = new HashMap<>();
+		final ItemContainer inventory = client.getItemContainer(InventoryID.INV);
+		if (inventory != null)
+		{
+			for (Item item : inventory.getItems())
+			{
+				if (item.getId() != -1)
+				{
+					counts.merge(item.getId(), item.getQuantity(), Integer::sum);
+				}
+			}
+		}
+		return counts;
 	}
 
 	/**
