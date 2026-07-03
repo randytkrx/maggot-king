@@ -64,6 +64,9 @@ final class MaggotKingIds
 		return (objectId >= 40788 && objectId <= 40825) || objectId == 61049;
 	}
 
+	/** Coins (gameval ItemID.COINS). */
+	static final int COINS = 995;
+
 	// Egg loot (gameval ItemID)
 	static final Set<Integer> EGGS = ImmutableSet.of(
 		33665, // MAGGOT_EGG

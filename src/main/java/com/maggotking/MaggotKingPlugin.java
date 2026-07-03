@@ -434,8 +434,25 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 	private void addLoot(int itemId, int quantity)
 	{
-		final long value = (long) itemManager.getItemPrice(itemId) * quantity;
-		stats.addLoot(itemId, quantity, value);
+		stats.addLoot(itemId, quantity, itemValue(itemId) * quantity);
+	}
+
+	/**
+	 * Coins are worth their face value and untradeables have no exchange
+	 * price, so fall back to the high alchemy value for those.
+	 */
+	private long itemValue(int itemId)
+	{
+		if (itemId == MaggotKingIds.COINS)
+		{
+			return 1;
+		}
+		final int gePrice = itemManager.getItemPrice(itemId);
+		if (gePrice > 0)
+		{
+			return gePrice;
+		}
+		return itemManager.getItemComposition(itemId).getHaPrice();
 	}
 
 	private Map<Integer, Integer> snapshotInventory()
