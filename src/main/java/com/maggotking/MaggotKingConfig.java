@@ -103,6 +103,18 @@ public interface MaggotKingConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "blockExitDoorLeftClick",
+		name = "Block exit door left click",
+		description = "Demotes the exit door's left click action in the arena so an accidental click does not end the instance. Still usable via right-click",
+		section = alerts,
+		position = 3
+	)
+	default boolean blockExitDoorLeftClick()
+	{
+		return false;
+	}
+
 	// Highlights
 
 	@ConfigItem(

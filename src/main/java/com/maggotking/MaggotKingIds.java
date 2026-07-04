@@ -136,8 +136,11 @@ final class MaggotKingIds
 	 */
 	static boolean isTree(int objectId)
 	{
-		return (objectId >= 40788 && objectId <= 40825) || objectId == 61049;
+		return (objectId >= 40788 && objectId <= 40825) || objectId == EXIT_DOOR;
 	}
+
+	/** The arena's exit door object, part of the darkwood cluster rendered by {@link #isTree}. */
+	static final int EXIT_DOOR = 61049;
 
 	/** Coins (gameval ItemID.COINS). */
 	static final int COINS = 995;

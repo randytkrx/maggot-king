@@ -20,6 +20,11 @@ removes the darkwood scenery around the arena. Both are cosmetic, off by
 default, and never touch anything you can interact with, such as the tree you
 leave through or the bile you need to avoid.
 
+An optional block exit door left click option demotes the exit door's left
+click action in the arena, so an accidental click mid fight does not end the
+instance. It is off by default, adds no new options and removes none — the
+door is still one right-click away.
+
 ## Boss information
 
 Boss health is shown as a plain number in the overlay.

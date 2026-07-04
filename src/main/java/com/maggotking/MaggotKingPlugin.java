@@ -54,6 +54,7 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.ItemSpawned;
+import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
@@ -234,6 +235,18 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 			entries[entries.length - 1] = chosen;
 			client.setMenuEntries(entries);
 		}
+	}
+
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		// only demote (never remove) so the door stays reachable via right-click
+		if (!config.blockExitDoorLeftClick() || !arenaLoaded || event.getIdentifier() != MaggotKingIds.EXIT_DOOR)
+		{
+			return;
+		}
+
+		event.getMenuEntry().setDeprioritized(true);
 	}
 
 	@Subscribe
