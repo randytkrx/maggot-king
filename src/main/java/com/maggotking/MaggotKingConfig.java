@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Randy <nightlight681@gmail.com>
+ * Copyright (c) 2026, s59
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@ import net.runelite.client.config.Alpha;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.Range;
 import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup(MaggotKingConfig.GROUP)
@@ -88,6 +89,18 @@ public interface MaggotKingConfig extends Config
 	default CorpsePreference corpsePreference()
 	{
 		return CorpsePreference.TAKE_EGGS;
+	}
+
+	@ConfigItem(
+		keyName = "swapCorpseLeftClick",
+		name = "Swap corpse left click",
+		description = "Make your corpse preference the default left click option on the corpse",
+		section = alerts,
+		position = 2
+	)
+	default boolean swapCorpseLeftClick()
+	{
+		return true;
 	}
 
 	// Highlights
@@ -155,11 +168,49 @@ public interface MaggotKingConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "carrionDots",
+		name = "Carrion dots",
+		description = "When screech rocks are hidden, draw a dot on the tile of each hidden rock",
+		section = highlights,
+		position = 6
+	)
+	default boolean carrionDots()
+	{
+		return false;
+	}
+
+	@Alpha
+	@ConfigItem(
+		keyName = "carrionDotColor",
+		name = "Carrion dot color",
+		description = "Color of the hidden rock dots",
+		section = highlights,
+		position = 7
+	)
+	default Color carrionDotColor()
+	{
+		return new Color(255, 255, 255, 180);
+	}
+
+	@Range(min = 1, max = 12)
+	@ConfigItem(
+		keyName = "carrionDotSize",
+		name = "Carrion dot size",
+		description = "Radius of the hidden rock dots in pixels",
+		section = highlights,
+		position = 8
+	)
+	default int carrionDotSize()
+	{
+		return 3;
+	}
+
+	@ConfigItem(
 		keyName = "hideTrees",
 		name = "Hide trees",
 		description = "Hide the darkwood trees around the arena",
 		section = highlights,
-		position = 6
+		position = 9
 	)
 	default boolean hideTrees()
 	{
@@ -171,7 +222,7 @@ public interface MaggotKingConfig extends Config
 		name = "Show arena border",
 		description = "Outline the edge of the arena, useful when the trees are hidden",
 		section = highlights,
-		position = 7
+		position = 10
 	)
 	default boolean showArenaBorder()
 	{
@@ -183,7 +234,7 @@ public interface MaggotKingConfig extends Config
 		name = "Border style",
 		description = "Draw the arena border as full tiles or as thin edge lines",
 		section = highlights,
-		position = 8
+		position = 11
 	)
 	default BorderStyle arenaBorderStyle()
 	{
@@ -196,7 +247,7 @@ public interface MaggotKingConfig extends Config
 		name = "Arena border color",
 		description = "Color of the arena border outline",
 		section = highlights,
-		position = 9
+		position = 12
 	)
 	default Color arenaBorderColor()
 	{
@@ -267,16 +318,61 @@ public interface MaggotKingConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "resetOnLogout",
+		name = "Reset session on logout",
+		description = "Clear the session stats when you log out. World hopping does not reset it",
+		section = tracking,
+		position = 2
+	)
+	default boolean resetOnLogout()
+	{
+		return true;
+	}
+
+	@Range(min = 0, max = 60)
+	@ConfigItem(
+		keyName = "resetAfterIdle",
+		name = "Reset after idle minutes",
+		description = "Reset the session if no kill happens for this many minutes. 0 disables it",
+		section = tracking,
+		position = 3
+	)
+	default int resetAfterIdle()
+	{
+		return 0;
+	}
+
 	enum CorpsePreference
 	{
-		TAKE_EGGS("Take eggs"),
-		OPEN_STOMACH("Open stomach");
+		TAKE_EGGS("Take eggs", "egg", "take", "loot", "search"),
+		OPEN_STOMACH("Open stomach", "stomach", "open", "sacrifice");
 
 		private final String action;
+		private final String[] keywords;
 
-		CorpsePreference(String action)
+		CorpsePreference(String action, String... keywords)
 		{
 			this.action = action;
+			this.keywords = keywords;
+		}
+
+		/** True when the given menu option text matches this preference. */
+		public boolean matches(String option)
+		{
+			if (option == null)
+			{
+				return false;
+			}
+			final String lower = option.toLowerCase();
+			for (String k : keywords)
+			{
+				if (lower.contains(k))
+				{
+					return true;
+				}
+			}
+			return false;
 		}
 
 		@Override

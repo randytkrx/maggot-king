@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Randy <nightlight681@gmail.com>
+ * Copyright (c) 2026, s59
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,6 +64,10 @@ class SceneOverlay extends Overlay
 		{
 			renderArenaBorder(graphics);
 		}
+		if (config.hideScreechRocks() && config.carrionDots())
+		{
+			renderCarrionDots(graphics);
+		}
 		if (config.highlightLarvae())
 		{
 			renderLarvae(graphics);
@@ -77,6 +81,25 @@ class SceneOverlay extends Overlay
 			renderCorpse(graphics);
 		}
 		return null;
+	}
+
+	private void renderCarrionDots(Graphics2D graphics)
+	{
+		graphics.setColor(config.carrionDotColor());
+		for (net.runelite.api.GameObject carrion : tracker.getCarrions())
+		{
+			final LocalPoint lp = carrion.getLocalLocation();
+			if (lp == null)
+			{
+				continue;
+			}
+			final Point p = Perspective.localToCanvas(client, lp, client.getPlane());
+			if (p != null)
+			{
+				final int r = config.carrionDotSize();
+				graphics.fillOval(p.getX() - r, p.getY() - r, r * 2, r * 2);
+			}
+		}
 	}
 
 	private void renderArenaBorder(Graphics2D graphics)

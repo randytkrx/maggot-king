@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Randy <nightlight681@gmail.com>
+ * Copyright (c) 2026, s59
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,7 +60,17 @@ class SessionStats
 	@Getter
 	private Duration sessionBest;
 
+	/** When the last kill, death or loot happened, for the idle reset. */
+	@Getter
+	private Instant lastActivity = Instant.now();
+
 	private Instant killStart;
+
+	/** True when nothing has been recorded this session yet. */
+	boolean isEmpty()
+	{
+		return killCount == 0 && deaths == 0 && lootValue == 0;
+	}
 
 	/**
 	 * A kill attempt began (boss spawned or first engaged).
@@ -76,6 +86,7 @@ class SessionStats
 	Duration killFinished(Instant now)
 	{
 		killCount++;
+		lastActivity = now;
 		if (killStart == null)
 		{
 			return null;
@@ -93,11 +104,13 @@ class SessionStats
 	void addDeath()
 	{
 		deaths++;
+		lastActivity = Instant.now();
 	}
 
 	void addLoot(int itemId, int quantity, long value)
 	{
 		lootValue += value;
+		lastActivity = Instant.now();
 		if (MaggotKingIds.EGGS.contains(itemId))
 		{
 			eggCounts.merge(itemId, quantity, Integer::sum);
@@ -129,5 +142,6 @@ class SessionStats
 		lastKillTime = null;
 		sessionBest = null;
 		killStart = null;
+		lastActivity = Instant.now();
 	}
 }

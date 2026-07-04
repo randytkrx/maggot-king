@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Randy <nightlight681@gmail.com>
+ * Copyright (c) 2026, s59
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -201,6 +201,58 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	}
 
 	@Subscribe
+	public void onPostMenuSort(net.runelite.api.events.PostMenuSort event)
+	{
+		// static, user configured swap: make the preferred corpse action the
+		// default left click. Only touches the Maggot King corpse.
+		if (!config.swapCorpseLeftClick() || tracker.getCorpse() == null)
+		{
+			return;
+		}
+
+		final net.runelite.api.MenuEntry[] entries = client.getMenuEntries();
+		int preferred = -1;
+		for (int i = 0; i < entries.length; i++)
+		{
+			final net.runelite.api.MenuEntry e = entries[i];
+			if (e.getNpc() == tracker.getCorpse() && config.corpsePreference().matches(e.getOption()))
+			{
+				preferred = i;
+				break;
+			}
+		}
+
+		// move the preferred entry to the end of the array, which is the top of
+		// the menu and the left click action
+		if (preferred >= 0 && preferred != entries.length - 1)
+		{
+			final net.runelite.api.MenuEntry chosen = entries[preferred];
+			for (int i = preferred; i < entries.length - 1; i++)
+			{
+				entries[i] = entries[i + 1];
+			}
+			entries[entries.length - 1] = chosen;
+			client.setMenuEntries(entries);
+		}
+	}
+
+	@Subscribe
+	public void onGameObjectSpawned(net.runelite.api.events.GameObjectSpawned event)
+	{
+		final GameObject go = event.getGameObject();
+		if (arenaLoaded && MaggotKingIds.SCREECH_ROCK_OBJECTS.contains(go.getId()))
+		{
+			tracker.getCarrions().add(go);
+		}
+	}
+
+	@Subscribe
+	public void onGameObjectDespawned(net.runelite.api.events.GameObjectDespawned event)
+	{
+		tracker.getCarrions().remove(event.getGameObject());
+	}
+
+	@Subscribe
 	public void onNpcDespawned(NpcDespawned event)
 	{
 		tracker.removeNpc(event.getNpc());
@@ -374,6 +426,18 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		{
 			tracker.reset();
 		}
+		if (event.getGameState() == GameState.LOGIN_SCREEN && config.resetOnLogout())
+		{
+			// a real logout clears the session; hopping is handled above and
+			// does not reset
+			resetSession();
+		}
+		if (event.getGameState() == GameState.LOADING)
+		{
+			// carrion game objects belong to the scene being torn down, so drop
+			// them; leaving them would draw dots at stale spots outside the arena
+			tracker.getCarrions().clear();
+		}
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
 			// cache whether the arena region is loaded so tree hiding only
@@ -410,6 +474,15 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		{
 			lootSnapshot = null;
 		}
+
+		// idle reset: clear the session if nothing has happened for a while
+		final int idle = config.resetAfterIdle();
+		if (idle > 0 && !stats.isEmpty()
+			&& Duration.between(stats.getLastActivity(), Instant.now()).toMinutes() >= idle)
+		{
+			resetSession();
+		}
+
 		refreshPanel();
 	}
 

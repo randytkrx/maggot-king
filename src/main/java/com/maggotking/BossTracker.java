@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Randy <nightlight681@gmail.com>
+ * Copyright (c) 2026, s59
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,10 @@ class BossTracker
 
 	@Getter
 	private final Set<NPC> larvae = new HashSet<>();
+
+	/** Carrion rock game objects, tracked so a dot can mark them when hidden. */
+	@Getter
+	private final Set<net.runelite.api.GameObject> carrions = new HashSet<>();
 
 	@Getter
 	private int corpseReminderTicks;
@@ -119,6 +123,7 @@ class BossTracker
 		boss = null;
 		corpse = null;
 		larvae.clear();
+		carrions.clear();
 		corpseReminderTicks = 0;
 		burnDamage = 0;
 		inArena = false;
