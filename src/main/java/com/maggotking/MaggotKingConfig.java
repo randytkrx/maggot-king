@@ -178,13 +178,25 @@ public interface MaggotKingConfig extends Config
 		return false;
 	}
 
+	@ConfigItem(
+		keyName = "arenaBorderStyle",
+		name = "Border style",
+		description = "Draw the arena border as full tiles or as thin edge lines",
+		section = highlights,
+		position = 8
+	)
+	default BorderStyle arenaBorderStyle()
+	{
+		return BorderStyle.TILES;
+	}
+
 	@Alpha
 	@ConfigItem(
 		keyName = "arenaBorderColor",
 		name = "Arena border color",
 		description = "Color of the arena border outline",
 		section = highlights,
-		position = 8
+		position = 9
 	)
 	default Color arenaBorderColor()
 	{
@@ -232,11 +244,23 @@ public interface MaggotKingConfig extends Config
 	// Tracking
 
 	@ConfigItem(
+		keyName = "showPanel",
+		name = "Show side panel",
+		description = "Show the statistics tab in the sidebar. Turn off for a thinner, cleaner sidebar",
+		section = tracking,
+		position = 0
+	)
+	default boolean showPanel()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "showSessionStats",
 		name = "Session stats in overlay",
 		description = "Show kill count, kill times and loot in the status overlay",
 		section = tracking,
-		position = 0
+		position = 1
 	)
 	default boolean showSessionStats()
 	{
@@ -259,6 +283,25 @@ public interface MaggotKingConfig extends Config
 		public String toString()
 		{
 			return action;
+		}
+	}
+
+	enum BorderStyle
+	{
+		TILES("Tiles"),
+		LINES("Lines");
+
+		private final String label;
+
+		BorderStyle(String label)
+		{
+			this.label = label;
+		}
+
+		@Override
+		public String toString()
+		{
+			return label;
 		}
 	}
 }

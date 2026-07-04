@@ -73,6 +73,51 @@ final class MaggotKingIds
 		return border;
 	}
 
+	enum Edge
+	{
+		NORTH, EAST, SOUTH, WEST
+	}
+
+	/** A single edge line of the arena border, drawn along one side of a tile. */
+	static final class BorderLine
+	{
+		final WorldPoint tile;
+		final Edge edge;
+
+		BorderLine(int regionX, int regionY, Edge edge)
+		{
+			this.tile = WorldPoint.fromRegion(ARENA_REGION, regionX, regionY, 0);
+			this.edge = edge;
+		}
+	}
+
+	/**
+	 * The arena border as thin edge lines, from a line marker export. Draws a
+	 * west, south and east edge around the arena.
+	 */
+	static final List<BorderLine> ARENA_BORDER_LINES = buildBorderLines();
+
+	private static List<BorderLine> buildBorderLines()
+	{
+		final List<BorderLine> lines = new ArrayList<>();
+		// west edge, region x 24, y 33-36
+		for (int y = 33; y <= 36; y++)
+		{
+			lines.add(new BorderLine(24, y, Edge.WEST));
+		}
+		// south edge, y 33, x 24-38
+		for (int x = 24; x <= 38; x++)
+		{
+			lines.add(new BorderLine(x, 33, Edge.SOUTH));
+		}
+		// east edge, x 38, y 33-36
+		for (int y = 33; y <= 36; y++)
+		{
+			lines.add(new BorderLine(38, y, Edge.EAST));
+		}
+		return lines;
+	}
+
 	/*
 	 * NOTE: the "Odd tree" NPC (16239) is the way OUT of the arena and must
 	 * never be hidden, so tree hiding covers scenery objects only.

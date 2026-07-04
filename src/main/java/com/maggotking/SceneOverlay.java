@@ -82,6 +82,12 @@ class SceneOverlay extends Overlay
 	private void renderArenaBorder(Graphics2D graphics)
 	{
 		final Color color = config.arenaBorderColor();
+		if (config.arenaBorderStyle() == MaggotKingConfig.BorderStyle.LINES)
+		{
+			renderArenaBorderLines(graphics, color);
+			return;
+		}
+
 		for (WorldPoint tile : MaggotKingIds.ARENA_BORDER)
 		{
 			// resolve the template tile into the current instance, if any
@@ -98,6 +104,59 @@ class SceneOverlay extends Overlay
 				}
 			}
 		}
+	}
+
+	private void renderArenaBorderLines(Graphics2D graphics, Color color)
+	{
+		final int half = Perspective.LOCAL_TILE_SIZE / 2;
+		final int plane = client.getTopLevelWorldView().getPlane();
+		graphics.setColor(color);
+		final java.awt.Stroke old = graphics.getStroke();
+		graphics.setStroke(new java.awt.BasicStroke(2f));
+
+		for (MaggotKingIds.BorderLine line : MaggotKingIds.ARENA_BORDER_LINES)
+		{
+			for (WorldPoint wp : WorldPoint.toLocalInstance(client.getTopLevelWorldView(), line.tile))
+			{
+				final LocalPoint c = LocalPoint.fromWorld(client.getTopLevelWorldView(), wp);
+				if (c == null)
+				{
+					continue;
+				}
+
+				// two corner local points for the requested edge
+				final LocalPoint a;
+				final LocalPoint b;
+				switch (line.edge)
+				{
+					case WEST:
+						a = new LocalPoint(c.getX() - half, c.getY() - half);
+						b = new LocalPoint(c.getX() - half, c.getY() + half);
+						break;
+					case EAST:
+						a = new LocalPoint(c.getX() + half, c.getY() - half);
+						b = new LocalPoint(c.getX() + half, c.getY() + half);
+						break;
+					case SOUTH:
+						a = new LocalPoint(c.getX() - half, c.getY() - half);
+						b = new LocalPoint(c.getX() + half, c.getY() - half);
+						break;
+					default: // NORTH
+						a = new LocalPoint(c.getX() - half, c.getY() + half);
+						b = new LocalPoint(c.getX() + half, c.getY() + half);
+						break;
+				}
+
+				final Point pa = Perspective.localToCanvas(client, a, plane);
+				final Point pb = Perspective.localToCanvas(client, b, plane);
+				if (pa != null && pb != null)
+				{
+					graphics.drawLine(pa.getX(), pa.getY(), pb.getX(), pb.getY());
+				}
+			}
+		}
+
+		graphics.setStroke(old);
 	}
 
 	private void renderLarvae(Graphics2D graphics)

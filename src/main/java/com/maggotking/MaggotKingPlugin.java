@@ -156,7 +156,10 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 			.priority(7)
 			.panel(panel)
 			.build();
-		clientToolbar.addNavigation(navButton);
+		if (config.showPanel())
+		{
+			clientToolbar.addNavigation(navButton);
+		}
 
 		overlayManager.add(sceneOverlay);
 		overlayManager.add(statusOverlay);
@@ -244,6 +247,18 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		{
 			// redraw the affected scene zones so the change applies at once
 			clientThread.invokeLater(this::invalidateHideableZones);
+		}
+		else if ("showPanel".equals(key) && navButton != null)
+		{
+			// add or remove the side panel without needing a restart
+			if (config.showPanel())
+			{
+				clientToolbar.addNavigation(navButton);
+			}
+			else
+			{
+				clientToolbar.removeNavigation(navButton);
+			}
 		}
 	}
 
