@@ -103,6 +103,19 @@ public interface MaggotKingConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "deprioritizeExit",
+		name = "Disable exit door left click",
+		description = "Stop the exit door triggering on a left click in the arena, so you do not "
+			+ "accidentally leave mid fight. Still selectable from the right click menu",
+		section = alerts,
+		position = 3
+	)
+	default boolean deprioritizeExit()
+	{
+		return false;
+	}
+
 	// Highlights
 
 	@ConfigItem(
@@ -218,11 +231,23 @@ public interface MaggotKingConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "hideExitDoor",
+		name = "Hide exit door",
+		description = "Hide the quick exit door in the arena. The exit option still appears on hover",
+		section = highlights,
+		position = 10
+	)
+	default boolean hideExitDoor()
+	{
+		return false;
+	}
+
+	@ConfigItem(
 		keyName = "showArenaBorder",
 		name = "Show arena border",
 		description = "Outline the edge of the arena, useful when the trees are hidden",
 		section = highlights,
-		position = 10
+		position = 11
 	)
 	default boolean showArenaBorder()
 	{
@@ -234,7 +259,7 @@ public interface MaggotKingConfig extends Config
 		name = "Border style",
 		description = "Draw the arena border as full tiles or as thin edge lines",
 		section = highlights,
-		position = 11
+		position = 12
 	)
 	default BorderStyle arenaBorderStyle()
 	{
@@ -247,7 +272,7 @@ public interface MaggotKingConfig extends Config
 		name = "Arena border color",
 		description = "Color of the arena border outline",
 		section = highlights,
-		position = 12
+		position = 13
 	)
 	default Color arenaBorderColor()
 	{

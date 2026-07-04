@@ -201,6 +201,18 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	}
 
 	@Subscribe
+	public void onMenuEntryAdded(net.runelite.api.events.MenuEntryAdded event)
+	{
+		// demote the exit door so a left click no longer leaves the instance;
+		// it stays selectable from the right click menu. Static and arena only.
+		if (config.deprioritizeExit() && arenaLoaded
+			&& event.getIdentifier() == MaggotKingIds.EXIT_DOOR)
+		{
+			event.getMenuEntry().setDeprioritized(true);
+		}
+	}
+
+	@Subscribe
 	public void onPostMenuSort(net.runelite.api.events.PostMenuSort event)
 	{
 		// static, user configured swap: make the preferred corpse action the
@@ -276,14 +288,16 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 			return false;
 		}
 		return (config.hideScreechRocks() && MaggotKingIds.SCREECH_ROCK_OBJECTS.contains(id))
-			|| (config.hideTrees() && MaggotKingIds.isTree(id));
+			|| (config.hideTrees() && MaggotKingIds.isTree(id))
+			|| (config.hideExitDoor() && id == MaggotKingIds.EXIT_DOOR);
 	}
 
 	/** Any id one of the hide options covers, regardless of current toggles. */
 	private static boolean isHideableObject(int id)
 	{
 		return MaggotKingIds.SCREECH_ROCK_OBJECTS.contains(id)
-			|| MaggotKingIds.isTree(id);
+			|| MaggotKingIds.isTree(id)
+			|| id == MaggotKingIds.EXIT_DOOR;
 	}
 
 	@Subscribe
@@ -295,7 +309,7 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		}
 
 		final String key = event.getKey();
-		if ("hideTrees".equals(key) || "hideScreechRocks".equals(key))
+		if ("hideTrees".equals(key) || "hideScreechRocks".equals(key) || "hideExitDoor".equals(key))
 		{
 			// redraw the affected scene zones so the change applies at once
 			clientThread.invokeLater(this::invalidateHideableZones);

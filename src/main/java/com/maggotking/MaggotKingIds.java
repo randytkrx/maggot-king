@@ -132,12 +132,15 @@ final class MaggotKingIds
 
 	/**
 	 * The darkwood and fallen tree scenery around the arena, observed in game
-	 * as ids 40788-40825 plus the 61049 darkwood cluster.
+	 * as ids 40788-40825. The 61049 exit door is handled separately.
 	 */
 	static boolean isTree(int objectId)
 	{
-		return (objectId >= 40788 && objectId <= 40825) || objectId == 61049;
+		return objectId >= 40788 && objectId <= 40825;
 	}
+
+	/** The quick exit door object in the arena. */
+	static final int EXIT_DOOR = 61049;
 
 	/** Coins (gameval ItemID.COINS). */
 	static final int COINS = 995;
