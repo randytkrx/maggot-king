@@ -53,8 +53,6 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.api.events.ItemContainerChanged;
-import net.runelite.api.events.ItemSpawned;
-import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.gameval.InventoryID;
@@ -65,9 +63,7 @@ import net.runelite.client.callback.RenderCallbackManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemManager;
-import net.runelite.client.game.ItemStack;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -128,9 +124,9 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	private NavigationButton navButton;
 
 	/**
-	 * The corpse is looted by interacting with it rather than through a kill
-	 * drop, so no loot event fires for it. Loot is captured by snapshotting
-	 * the inventory when the corpse is clicked and diffing what arrives.
+	 * Loot drops straight into the inventory on the kill, and no loot event fires
+	 * for it, so it is captured by snapshotting the inventory when the corpse
+	 * appears and adding each net gain over the window that follows.
 	 */
 	private Map<Integer, Integer> lootSnapshot;
 	private int lootWindowTicks;
@@ -196,6 +192,11 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 				break;
 			case MaggotKingIds.CORPSE:
 				tracker.corpseSpawned(npc);
+				// the corpse appearing marks the kill; loot now drops straight into
+				// the inventory, so arm the capture window from here and diff the
+				// inventory gains rather than waiting for a corpse interaction
+				lootSnapshot = snapshotInventory();
+				lootWindowTicks = 30;
 				break;
 		}
 	}
@@ -501,42 +502,19 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	}
 
 	@Subscribe
-	public void onNpcLootReceived(NpcLootReceived event)
-	{
-		final int npcId = event.getNpc().getId();
-		if (npcId != MaggotKingIds.BOSS && npcId != MaggotKingIds.CORPSE)
-		{
-			return;
-		}
-
-		for (ItemStack item : event.getItems())
-		{
-			addLoot(item.getId(), item.getQuantity());
-		}
-		refreshPanel();
-	}
-
-	@Subscribe
-	public void onMenuOptionClicked(MenuOptionClicked event)
-	{
-		// arm the loot capture window when the corpse is interacted with
-		if (tracker.getCorpse() != null && event.getMenuEntry().getNpc() == tracker.getCorpse())
-		{
-			lootSnapshot = snapshotInventory();
-			lootWindowTicks = 10;
-		}
-	}
-
-	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
+		// loot drops into the inventory in a single refresh on the kill, so the
+		// first inventory change after the corpse appears carries all of it. Diff
+		// that one change against the pre kill snapshot, then close the window so
+		// later inventory actions (re gearing, potions, banking) are never counted
 		if (lootWindowTicks <= 0 || lootSnapshot == null || event.getContainerId() != InventoryID.INV)
 		{
 			return;
 		}
 
-		boolean gainedAny = false;
 		final Map<Integer, Integer> now = snapshotInventory();
+		boolean gainedAny = false;
 		for (Map.Entry<Integer, Integer> entry : now.entrySet())
 		{
 			final int gained = entry.getValue() - lootSnapshot.getOrDefault(entry.getKey(), 0);
@@ -547,23 +525,11 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 			}
 		}
 
+		// close the window once loot has been captured
 		if (gainedAny)
 		{
 			lootWindowTicks = 0;
 			lootSnapshot = null;
-			refreshPanel();
-		}
-	}
-
-	@Subscribe
-	public void onItemSpawned(ItemSpawned event)
-	{
-		// loot that spills onto the floor beside the corpse
-		if (lootWindowTicks > 0
-			&& tracker.getCorpse() != null
-			&& event.getTile().getWorldLocation().distanceTo(tracker.getCorpse().getWorldLocation()) <= 3)
-		{
-			addLoot(event.getItem().getId(), event.getItem().getQuantity());
 			refreshPanel();
 		}
 	}
