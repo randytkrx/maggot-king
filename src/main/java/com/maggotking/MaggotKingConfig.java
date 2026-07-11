@@ -279,6 +279,30 @@ public interface MaggotKingConfig extends Config
 		return new Color(255, 230, 0, 160);
 	}
 
+	@ConfigItem(
+		keyName = "hideDeadLarvae",
+		name = "Hide killed larvae",
+		description = "Make larvae invisible the moment they die, instead of waiting for the death animation",
+		section = highlights,
+		position = 14
+	)
+	default boolean hideDeadLarvae()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "hideSelfInArena",
+		name = "Hide your player in arena",
+		description = "Hide your own character model while inside the Maggot King arena, for a clearer view of tiles and larvae",
+		section = highlights,
+		position = 15
+	)
+	default boolean hideSelfInArena()
+	{
+		return false;
+	}
+
 	// Boss info
 
 	@ConfigItem(

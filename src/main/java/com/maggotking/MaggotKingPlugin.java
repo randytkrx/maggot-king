@@ -44,6 +44,8 @@ import net.runelite.api.HitsplatID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.NPC;
+import net.runelite.api.Player;
+import net.runelite.api.Renderable;
 import net.runelite.api.Scene;
 import net.runelite.api.Tile;
 import net.runelite.api.TileObject;
@@ -58,12 +60,14 @@ import net.runelite.api.events.NpcSpawned;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.hooks.DrawCallbacks;
 import net.runelite.client.callback.ClientThread;
+import net.runelite.client.callback.Hooks;
 import net.runelite.client.callback.RenderCallback;
 import net.runelite.client.callback.RenderCallbackManager;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.NpcUtil;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -120,6 +124,18 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	@Inject
 	private RenderCallbackManager renderCallbackManager;
 
+	@Inject
+	private Hooks hooks;
+
+	@Inject
+	private NpcUtil npcUtil;
+
+	/** Entity draw filter: hides slain larvae and, optionally, the local player. */
+	private final Hooks.RenderableDrawListener drawListener = this::shouldDraw;
+
+	/** Larvae whose death has registered, hidden immediately at draw time. */
+	private final Set<NPC> slainLarvae = new HashSet<>();
+
 	private MaggotKingPanel panel;
 	private NavigationButton navButton;
 
@@ -160,6 +176,7 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		overlayManager.add(sceneOverlay);
 		overlayManager.add(statusOverlay);
 		renderCallbackManager.register(this);
+		hooks.registerRenderableDrawListener(drawListener);
 		clientThread.invokeLater(this::invalidateHideableZones);
 	}
 
@@ -167,6 +184,8 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	protected void shutDown()
 	{
 		renderCallbackManager.unregister(this);
+		hooks.unregisterRenderableDrawListener(drawListener);
+		slainLarvae.clear();
 		clientThread.invokeLater(this::invalidateHideableZones);
 		overlayManager.remove(sceneOverlay);
 		overlayManager.remove(statusOverlay);
@@ -174,6 +193,38 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		panel = null;
 		navButton = null;
 		tracker.reset();
+	}
+
+	/**
+	 * Entity draw filter, arena only. Slain larvae vanish the moment their death
+	 * registers rather than lingering through the death animation, and the local
+	 * player model can be hidden for a clear view of the tiles. 2D elements
+	 * (hitsplats, overhead icons) are left visible.
+	 */
+	private boolean shouldDraw(Renderable renderable, boolean drawingUI)
+	{
+		if (!arenaLoaded)
+		{
+			return true;
+		}
+
+		if (renderable instanceof Player)
+		{
+			return !(config.hideSelfInArena() && !drawingUI
+				&& renderable == client.getLocalPlayer());
+		}
+
+		if (renderable instanceof NPC)
+		{
+			final NPC npc = (NPC) renderable;
+			if (config.hideDeadLarvae() && npc.getId() == MaggotKingIds.LARVA
+				&& (slainLarvae.contains(npc) || npcUtil.isDying(npc)))
+			{
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	@Subscribe
@@ -269,6 +320,7 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	public void onNpcDespawned(NpcDespawned event)
 	{
 		tracker.removeNpc(event.getNpc());
+		slainLarvae.remove(event.getNpc());
 	}
 
 	/**
@@ -421,6 +473,12 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 			stats.addDeath();
 			refreshPanel();
 		}
+		else if (actor instanceof NPC && ((NPC) actor).getId() == MaggotKingIds.LARVA)
+		{
+			// hide the larva the moment its death registers, before the death
+			// animation plays out
+			slainLarvae.add((NPC) actor);
+		}
 	}
 
 	@Subscribe
@@ -504,11 +562,13 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
-		// loot drops into the inventory in a single refresh on the kill, so the
-		// first inventory change after the corpse appears carries all of it. Diff
-		// that one change against the pre kill snapshot, then close the window so
-		// later inventory actions (re gearing, potions, banking) are never counted
-		if (lootWindowTicks <= 0 || lootSnapshot == null || event.getContainerId() != InventoryID.INV)
+		// loot drops into the inventory in a single refresh on the kill. Diff the
+		// carried total (inventory + equipment) against the pre kill snapshot so a
+		// gear swap nets to zero, then close the window once real loot is captured
+		// so later inventory actions are never counted
+		final int containerId = event.getContainerId();
+		if (lootWindowTicks <= 0 || lootSnapshot == null
+			|| (containerId != InventoryID.INV && containerId != InventoryID.WORN))
 		{
 			return;
 		}
@@ -557,13 +617,25 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		return itemManager.getItemComposition(itemId).getHaPrice();
 	}
 
+	/**
+	 * Counts everything the player is carrying: inventory plus worn equipment.
+	 * Diffing this combined total means a gear swap, which just moves an item
+	 * between the two containers, nets to zero and is never mistaken for loot.
+	 */
 	private Map<Integer, Integer> snapshotInventory()
 	{
 		final Map<Integer, Integer> counts = new HashMap<>();
-		final ItemContainer inventory = client.getItemContainer(InventoryID.INV);
-		if (inventory != null)
+		addContainer(counts, InventoryID.INV);
+		addContainer(counts, InventoryID.WORN);
+		return counts;
+	}
+
+	private void addContainer(Map<Integer, Integer> counts, int containerId)
+	{
+		final ItemContainer container = client.getItemContainer(containerId);
+		if (container != null)
 		{
-			for (Item item : inventory.getItems())
+			for (Item item : container.getItems())
 			{
 				if (item.getId() != -1)
 				{
@@ -571,7 +643,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 				}
 			}
 		}
-		return counts;
 	}
 
 	/**
