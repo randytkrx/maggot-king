@@ -113,9 +113,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	private StatusOverlay statusOverlay;
 
 	@Inject
-	private EggRarityOverlay eggRarityOverlay;
-
-	@Inject
 	private ClientToolbar clientToolbar;
 
 	@Inject
@@ -178,7 +175,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 		overlayManager.add(sceneOverlay);
 		overlayManager.add(statusOverlay);
-		overlayManager.add(eggRarityOverlay);
 		renderCallbackManager.register(this);
 		hooks.registerRenderableDrawListener(drawListener);
 		clientThread.invokeLater(this::invalidateHideableZones);
@@ -193,7 +189,6 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		clientThread.invokeLater(this::invalidateHideableZones);
 		overlayManager.remove(sceneOverlay);
 		overlayManager.remove(statusOverlay);
-		overlayManager.remove(eggRarityOverlay);
 		clientToolbar.removeNavigation(navButton);
 		panel = null;
 		navButton = null;

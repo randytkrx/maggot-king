@@ -392,18 +392,6 @@ public interface MaggotKingConfig extends Config
 		return 0;
 	}
 
-	@ConfigItem(
-		keyName = "showEggPetOdds",
-		name = "Egg pet odds",
-		description = "Show each maggot egg's pet hatch chance on the item in the inventory and bank, from 1/300 (base) up to 1/1 (writhing)",
-		section = tracking,
-		position = 4
-	)
-	default boolean showEggPetOdds()
-	{
-		return true;
-	}
-
 	enum CorpsePreference
 	{
 		TAKE_EGGS("Take eggs", "egg", "take", "loot", "search"),
