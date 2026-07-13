@@ -113,6 +113,9 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	private StatusOverlay statusOverlay;
 
 	@Inject
+	private EggRarityOverlay eggRarityOverlay;
+
+	@Inject
 	private ClientToolbar clientToolbar;
 
 	@Inject
@@ -175,6 +178,7 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 
 		overlayManager.add(sceneOverlay);
 		overlayManager.add(statusOverlay);
+		overlayManager.add(eggRarityOverlay);
 		renderCallbackManager.register(this);
 		hooks.registerRenderableDrawListener(drawListener);
 		clientThread.invokeLater(this::invalidateHideableZones);
@@ -189,6 +193,7 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		clientThread.invokeLater(this::invalidateHideableZones);
 		overlayManager.remove(sceneOverlay);
 		overlayManager.remove(statusOverlay);
+		overlayManager.remove(eggRarityOverlay);
 		clientToolbar.removeNavigation(navButton);
 		panel = null;
 		navButton = null;
@@ -330,7 +335,12 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 	@Override
 	public boolean drawObject(Scene scene, TileObject object)
 	{
-		return !isHiddenObject(object.getId());
+		// the callback also receives actor-backed scene entries whose id is a
+		// scene index, not an object id. Only filter real game objects (hash
+		// type 2) so an npc index can never collide with a hidden object id
+		// and hide the boss (#4, reported by JZomDev, fix from bopsec)
+		final int type = (int) (object.getHash() >> 16) & 7;
+		return type != 2 || !isHiddenObject(object.getId());
 	}
 
 	private boolean isHiddenObject(int id)
