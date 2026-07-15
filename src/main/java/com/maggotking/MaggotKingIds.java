@@ -155,6 +155,48 @@ final class MaggotKingIds
 		33675  // WRITHING_MAGGOT_EGG
 	);
 
+	/**
+	 * Egg tiers with the confirmed pet hatch chance (1 in petChance) for the
+	 * Maggot King pet, plus the egg's own drop weighting (out of 1500).
+	 */
+	enum EggTier
+	{
+		BASE(33665, 300, 3000, new java.awt.Color(198, 198, 198)),
+		SICKLY(33667, 150, 2500, new java.awt.Color(94, 199, 94)),
+		WARM(33669, 33, 1250, new java.awt.Color(100, 180, 255)),
+		PULSATING(33671, 6, 500, new java.awt.Color(200, 110, 255)),
+		WRIGGLING(33673, 3, 10, new java.awt.Color(255, 160, 40)),
+		WRITHING(33675, 1, 2, new java.awt.Color(255, 215, 0));
+
+		final int itemId;
+		final int dropWeight;
+		final int petChance;
+		final java.awt.Color color;
+		final String petOdds;
+
+		EggTier(int itemId, int dropWeight, int petChance, java.awt.Color color)
+		{
+			this.itemId = itemId;
+			this.dropWeight = dropWeight;
+			this.petChance = petChance;
+			this.color = color;
+			this.petOdds = "1/" + petChance;
+		}
+	}
+
+	/** Tier for an egg item id, accepting the noted variant (id + 1), or null. */
+	static EggTier eggTier(int itemId)
+	{
+		for (EggTier tier : EggTier.values())
+		{
+			if (itemId == tier.itemId || itemId == tier.itemId + 1)
+			{
+				return tier;
+			}
+		}
+		return null;
+	}
+
 	// Boss health, confirmed in game
 	static final int MAX_HP = 1500;
 
