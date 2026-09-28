@@ -619,7 +619,7 @@ public class MaggotKingPlugin extends Plugin implements RenderCallback
 		{
 			return 1;
 		}
-		final int gePrice = itemManager.getItemPrice(itemId);
+		final long gePrice = itemManager.getItemPrice(itemId);
 		if (gePrice > 0)
 		{
 			return gePrice;
